@@ -30,8 +30,8 @@ public func getTypesOfProperties(in clazz: NSObject.Type, types: Dictionary<Stri
     guard let properties = class_copyPropertyList(clazz, &count) else { return nil }
     var types = types
     for i in 0..<Int(count) {
+        let property: objc_property_t = properties[i]
         guard
-            let property: objc_property_t = properties[i],
             let name = getNameOf(property: property)
             else { continue }
         let isReadOnlyProperty = isReadOnly(property: property)
@@ -54,8 +54,8 @@ public func getTypesOfProperties(ofObject object: NSObject) -> Dictionary<String
 }
 
 public func typeOf(property propertyName: String, for object: NSObject) -> Any? {
-    let type = type(of: object)
-    return typeOf(property: propertyName, in: type)
+    let type2 = type(of: object)
+    return typeOf(property: propertyName, in: type2)
 }
 
 public func typeOf(property propertyName: String, in clazz: NSObject.Type) -> Any? {
@@ -65,8 +65,8 @@ public func typeOf(property propertyName: String, in clazz: NSObject.Type) -> An
 }
 
 public func isProperty(named propertyName: String, ofType targetType: Any, for object: NSObject) -> Bool {
-    let type = type(of: object)
-    return isProperty(named: propertyName, ofType: targetType, in: type)
+    let type2 = type(of: object)
+    return isProperty(named: propertyName, ofType: targetType, in: type2)
 }
 
 public func isProperty(named propertyName: String, ofType targetType: Any, in clazz: NSObject.Type) -> Bool {
@@ -104,8 +104,8 @@ fileprivate func removeBrackets(_ className: String) -> String {
     return removed
 }
 
-fileprivate func getTypeOf(property: objc_property_t) -> Any {
-    guard let attributesAsNSString: NSString = NSString(utf8String: property_getAttributes(property)) else { return Any.self }
+public func getTypeOf(property: objc_property_t) -> Any {
+    guard let attributesAsNSString: NSString = NSString(utf8String: property_getAttributes(property)!) else { return Any.self }
     let attributes = attributesAsNSString as String
     let slices = attributes.components(separatedBy: "\"")
     guard slices.count > 1 else { return valueType(withAttributes: attributes) }
@@ -123,7 +123,7 @@ fileprivate func getTypeOf(property: objc_property_t) -> Any {
 }
 
 fileprivate func isReadOnly(property: objc_property_t) -> Bool {
-    guard let attributesAsNSString: NSString = NSString(utf8String: property_getAttributes(property)) else { return false }
+    guard let attributesAsNSString: NSString = NSString(utf8String: property_getAttributes(property)!) else { return false }
     let attributes = attributesAsNSString as String
     return attributes.contains(",R,")
 }
@@ -158,7 +158,7 @@ fileprivate let valueTypesMap: Dictionary<String, Any> = [
 private extension String {
     func substring(from fromIndex: Int, to toIndex: Int) -> String? {
         let substring = self[self.index(self.startIndex, offsetBy: fromIndex)..<self.index(self.startIndex, offsetBy: toIndex)]
-        return substring
+        return String(substring)
     }
 
     /// Extracts "NSDate" from the string "Optional(NSDate)"
